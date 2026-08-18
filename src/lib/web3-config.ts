@@ -12,9 +12,10 @@ export const wagmiConfig = getDefaultConfig({
   ssr: false,
 });
 
-// Deployed NFTVerse contract addresses per chain (fill in after deployment)
+// Deployed NFTVerse contract addresses per chain.
+// Sepolia is the first live testnet deployment.
 export const CONTRACT_ADDRESSES: Record<number, `0x${string}` | undefined> = {
-  [sepolia.id]: undefined,
+  [sepolia.id]: "0x02f93c7547309ca50EEAB446DaEBE8ce8E694cBb",
   [polygonAmoy.id]: undefined,
   [baseSepolia.id]: undefined,
   [mainnet.id]: undefined,
