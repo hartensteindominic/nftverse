@@ -10,6 +10,12 @@ import { useToast } from "@/components/ui/Toaster";
 
 const CATEGORIES = ["3D Art", "Abstract", "Generative", "Characters", "Landscapes", "Architecture"];
 
+function createMetadataURI(metadata: Record<string, unknown>) {
+  const json = JSON.stringify(metadata);
+  const encoded = typeof window !== "undefined" ? btoa(unescape(encodeURIComponent(json))) : Buffer.from(json).toString("base64");
+  return `data:application/json;base64,${encoded}`;
+}
+
 export default function MintPage() {
   const { address, chainId, isConnected } = useAccount();
   const { scene } = useCreatorStore();
@@ -35,23 +41,34 @@ export default function MintPage() {
       addToast("Please fill in name and description", "warning");
       return;
     }
+    if (scene.shapes.length === 0) {
+      addToast("Add at least one 3D shape in Creator Studio before minting", "warning");
+      return;
+    }
     if (!contractAddress) {
       addToast("No NFTVerse contract deployed on this network yet. Switch networks or deploy the contract.", "error");
       return;
     }
-    // Encode the 3D scene into the token metadata payload.
-    const metadataURI =
-      "data:application/json," +
-      encodeURIComponent(
-        JSON.stringify({
-          name,
-          description,
-          category,
-          price,
-          scene,
-          createdWith: "NFTVerse Creator Studio",
-        })
-      );
+
+    // The scene is the 3D asset definition. Embedding the metadata as a base64
+    // data URI makes tokenURI self-contained, so the NFT does not depend on
+    // this website remaining online. A future storage adapter can replace this
+    // with an IPFS/Arweave URI without changing the contract interface.
+    const metadataURI = createMetadataURI({
+      name,
+      description,
+      category,
+      image: "",
+      animation_url: "",
+      assetType: "NFTVerse-3D-Scene",
+      scene,
+      marketplace: {
+        listingPriceETH: price,
+        note: "Listing price is metadata only until a marketplace listing contract is enabled.",
+      },
+      createdWith: "NFTVerse Creator Studio",
+    });
+
     writeContract({
       address: contractAddress,
       abi: CONTRACT_ABI,
@@ -141,7 +158,7 @@ export default function MintPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-white/60 mb-2">
-                  <DollarSign className="w-4 h-4" /> Price (ETH)
+                  <DollarSign className="w-4 h-4" /> Listing Price (ETH)
                 </label>
                 <input
                   type="number"
@@ -168,7 +185,7 @@ export default function MintPage() {
               </div>
             </div>
             <p className="text-xs text-white/30">
-              Mint fee: {Number(MINT_FEE_WEI) / 1e18} ETH + gas
+              Mint fee: {Number(MINT_FEE_WEI) / 1e18} ETH + gas. Listing price is stored in the NFT metadata; it is not a marketplace sale until listing/sale contracts are enabled.
             </p>
           </div>
 
@@ -200,7 +217,7 @@ export default function MintPage() {
               animate={{ opacity: 1, y: 0 }}
               className="p-4 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-center"
             >
-              NFT minted successfully — it now appears in your Marketplace.
+              NFT minted successfully. The token URI contains the 3D scene metadata and can be read directly from the contract.
             </motion.div>
           )}
         </div>
