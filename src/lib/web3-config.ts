@@ -13,9 +13,19 @@ export const wagmiConfig = getDefaultConfig({
 });
 
 // Deployed NFTVerse contract addresses per chain.
-// Sepolia is the first live testnet deployment.
 export const CONTRACT_ADDRESSES: Record<number, `0x${string}` | undefined> = {
   [sepolia.id]: "0x02f93c7547309ca50EEAB446DaEBE8ce8E694cBb",
+  [polygonAmoy.id]: undefined,
+  [baseSepolia.id]: undefined,
+  [mainnet.id]: undefined,
+  [polygon.id]: undefined,
+  [base.id]: undefined,
+};
+
+// Marketplace is intentionally empty until the upgraded contract is deployed.
+// This prevents the frontend from ever pretending that a non-existent address is live.
+export const MARKETPLACE_ADDRESSES: Record<number, `0x${string}` | undefined> = {
+  [sepolia.id]: undefined,
   [polygonAmoy.id]: undefined,
   [baseSepolia.id]: undefined,
   [mainnet.id]: undefined,
@@ -51,6 +61,100 @@ export const CONTRACT_ABI = [
       { indexed: false, internalType: "string", name: "uri", type: "string" },
     ],
     name: "NFTMinted",
+    type: "event",
+  },
+] as const;
+
+export const MARKETPLACE_ABI = [
+  {
+    inputs: [
+      { internalType: "address", name: "nftAddress", type: "address" },
+      { internalType: "address payable", name: "recipient", type: "address" },
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+    name: "list",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "tokenId", type: "uint256" },
+      { internalType: "uint256", name: "price", type: "uint256" },
+    ],
+    name: "list",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+    name: "cancel",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+    name: "buy",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+    name: "getListing",
+    outputs: [
+      { internalType: "address", name: "seller", type: "address" },
+      { internalType: "uint128", name: "price", type: "uint128" },
+      { internalType: "bool", name: "active", type: "bool" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "withdrawProceeds",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "", type: "address" }],
+    name: "pendingWithdrawals",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "platformFeeBps",
+    outputs: [{ internalType: "uint96", name: "", type: "uint96" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "creatorRoyaltyBps",
+    outputs: [{ internalType: "uint96", name: "", type: "uint96" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "uint256", name: "tokenId", type: "uint256" },
+      { indexed: true, internalType: "address", name: "seller", type: "address" },
+      { indexed: true, internalType: "address", name: "buyer", type: "address" },
+      { indexed: false, internalType: "uint256", name: "price", type: "uint256" },
+      { indexed: false, internalType: "uint256", name: "platformFee", type: "uint256" },
+      { indexed: false, internalType: "uint256", name: "creatorRoyalty", type: "uint256" },
+    ],
+    name: "Sold",
     type: "event",
   },
 ] as const;
