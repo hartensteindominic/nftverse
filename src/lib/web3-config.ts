@@ -12,7 +12,6 @@ export const wagmiConfig = getDefaultConfig({
   ssr: false,
 });
 
-// Deployed NFTVerse contract addresses per chain.
 export const CONTRACT_ADDRESSES: Record<number, `0x${string}` | undefined> = {
   [sepolia.id]: "0x02f93c7547309ca50EEAB446DaEBE8ce8E694cBb",
   [polygonAmoy.id]: undefined,
@@ -22,8 +21,7 @@ export const CONTRACT_ADDRESSES: Record<number, `0x${string}` | undefined> = {
   [base.id]: undefined,
 };
 
-// Marketplace is intentionally empty until the upgraded contract is deployed.
-// This prevents the frontend from ever pretending that a non-existent address is live.
+// Populated only after the upgraded marketplace contract is deployed.
 export const MARKETPLACE_ADDRESSES: Record<number, `0x${string}` | undefined> = {
   [sepolia.id]: undefined,
   [polygonAmoy.id]: undefined,
@@ -33,7 +31,7 @@ export const MARKETPLACE_ADDRESSES: Record<number, `0x${string}` | undefined> = 
   [base.id]: undefined,
 };
 
-export const MINT_FEE_WEI = "10000000000000000"; // 0.01 ETH
+export const MINT_FEE_WEI = "10000000000000000";
 
 export const CONTRACT_ABI = [
   {
@@ -73,13 +71,6 @@ export const MARKETPLACE_ABI = [
     ],
     stateMutability: "nonpayable",
     type: "constructor",
-  },
-  {
-    inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
-    name: "list",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
   },
   {
     inputs: [
