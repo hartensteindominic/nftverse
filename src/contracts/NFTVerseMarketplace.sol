@@ -14,7 +14,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 ///      recipient callback from blocking an otherwise valid sale.
 contract NFTVerseMarketplace is IERC721Receiver, ReentrancyGuard, Pausable, Ownable {
     uint256 public constant BPS_DENOMINATOR = 10_000;
-    uint256 public constant MAX_TOTAL_FEE_BPS = 1_000; // 10%
+    uint256 public constant MAX_TOTAL_FEE_BPS = 1_000;
 
     struct Listing {
         address seller;
@@ -23,8 +23,8 @@ contract NFTVerseMarketplace is IERC721Receiver, ReentrancyGuard, Pausable, Owna
     }
 
     IERC721 public immutable nft;
-    uint96 public platformFeeBps = 250; // 2.5%
-    uint96 public creatorRoyaltyBps = 500; // 5%
+    uint96 public platformFeeBps = 250;
+    uint96 public creatorRoyaltyBps = 500;
     address payable public feeRecipient;
 
     mapping(uint256 => Listing) public listings;
@@ -89,14 +89,12 @@ contract NFTVerseMarketplace is IERC721Receiver, ReentrancyGuard, Pausable, Owna
         uint256 royalty = (msg.value * creatorRoyaltyBps) / BPS_DENOMINATOR;
         address creator = _creatorOf(tokenId);
 
-        // Do not pay a creator royalty to the seller. This prevents double-paying
-        // the seller when the original creator is also the current owner.
         if (creator == address(0) || creator == listing.seller) royalty = 0;
 
         uint256 sellerProceeds = msg.value - platformFee - royalty;
         delete listings[tokenId];
 
-        // Transfer first. If the NFT transfer fails, the entire transaction reverts.
+        // The NFT never enters marketplace custody. The transfer is atomic with the sale.
         nft.safeTransferFrom(listing.seller, msg.sender, tokenId);
 
         _credit(feeRecipient, platformFee);
@@ -106,7 +104,6 @@ contract NFTVerseMarketplace is IERC721Receiver, ReentrancyGuard, Pausable, Owna
         emit Sold(tokenId, listing.seller, msg.sender, msg.value, platformFee, royalty);
     }
 
-    /// @notice Withdraw ETH credited to msg.sender by completed sales.
     function withdrawProceeds() external nonReentrant {
         uint256 amount = pendingWithdrawals[msg.sender];
         require(amount > 0, "Nothing to withdraw");
@@ -167,12 +164,14 @@ contract NFTVerseMarketplace is IERC721Receiver, ReentrancyGuard, Pausable, Owna
 
     receive() external payable {}
 
+    // This marketplace is deliberately non-custodial. Reject direct NFT deposits
+    // so users cannot accidentally lock an asset that has not been listed.
     function onERC721Received(address, address, uint256, bytes calldata)
         external
         pure
         returns (bytes4)
     {
-        return IERC721Receiver.onERC721Received.selector;
+        revert("Marketplace is non-custodial");
     }
 }
 
